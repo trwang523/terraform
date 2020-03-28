@@ -24,14 +24,16 @@ data "vsphere_virtual_machine" "template" {
 }
 
 locals {
-  interface_count = length(var.vm_netmask)
+  interface_count     = length(var.vm_netmask)
+  template_disk_count = length(data.vsphere_virtual_machine.template.disks)
 }
 
 resource "vsphere_virtual_machine" "Windows" {
-  count                = var.is_windows == true ? var.instances : 0
-  name                 = var.vm_name[count.index]
-  resource_pool_id     = data.vsphere_resource_pool.pool.id
-  datastore_id         = data.vsphere_datastore.datastore.id
+  count            = var.is_windows == true ? var.instances : 0
+  name             = var.vm_name[count.index]
+  resource_pool_id = data.vsphere_resource_pool.pool.id
+  folder           = var.vm_folder
+  datastore_id     = data.vsphere_datastore.datastore.id
 
   num_cpus             = var.cpu_nums
   num_cores_per_socket = var.num_cores_per_socket
@@ -55,6 +57,7 @@ resource "vsphere_virtual_machine" "Windows" {
       size             = data.vsphere_virtual_machine.template.disks[template_disks.key].size
       eagerly_scrub    = data.vsphere_virtual_machine.template.disks[template_disks.key].eagerly_scrub
       thin_provisioned = data.vsphere_virtual_machine.template.disks[template_disks.key].thin_provisioned
+      unit_number      = template_disks.key
     }
   }
 
@@ -64,10 +67,10 @@ resource "vsphere_virtual_machine" "Windows" {
     customize {
       timeout = var.customize_timeout
       windows_options {
-        computer_name         = var.vm_computername[count.index]
-        workgroup             = var.vm_groupname
-        admin_password        = var.vm_adminpassword
-        time_zone             = var.vm_timezone
+        computer_name  = var.vm_computername[count.index]
+        workgroup      = var.vm_groupname
+        admin_password = var.vm_adminpassword
+        time_zone      = var.vm_timezone
       }
 
       dynamic "network_interface" {
@@ -85,10 +88,11 @@ resource "vsphere_virtual_machine" "Windows" {
 }
 
 resource "vsphere_virtual_machine" "Linux" {
-  count                = var.is_windows != true ? var.instances : 0
-  name                 = var.vm_name[count.index]
-  resource_pool_id     = data.vsphere_resource_pool.pool.id
-  datastore_id         = data.vsphere_datastore.datastore.id
+  count            = var.is_windows != true ? var.instances : 0
+  name             = var.vm_name[count.index]
+  resource_pool_id = data.vsphere_resource_pool.pool.id
+  folder           = var.vm_folder
+  datastore_id     = data.vsphere_datastore.datastore.id
 
   num_cpus             = var.cpu_nums
   num_cores_per_socket = var.num_cores_per_socket
@@ -112,6 +116,7 @@ resource "vsphere_virtual_machine" "Linux" {
       size             = data.vsphere_virtual_machine.template.disks[template_disks.key].size
       eagerly_scrub    = data.vsphere_virtual_machine.template.disks[template_disks.key].eagerly_scrub
       thin_provisioned = data.vsphere_virtual_machine.template.disks[template_disks.key].thin_provisioned
+      unit_number      = template_disks.key
     }
   }
 
@@ -122,7 +127,7 @@ resource "vsphere_virtual_machine" "Linux" {
       timeout = var.customize_timeout
       linux_options {
         host_name = var.vm_computername[count.index]
-        domain = var.linux_domain
+        domain    = var.linux_domain
         time_zone = var.vm_timezone
       }
 

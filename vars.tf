@@ -5,6 +5,10 @@ variable "instances" {
 variable "datacenter_name" {}
 variable "datastore_name" {}
 variable "resource_pool_name" {}
+variable "vm_folder" {
+  type    = string
+  default = null
+}
 variable "network_name" {
   type    = list
   default = ["Primary_Subnet"]
@@ -31,12 +35,12 @@ variable "customize_timeout" {
   type    = number
   default = 30
 }
-variable "linux_domain"{
-  type = string
+variable "linux_domain" {
+  type    = string
   default = "localhost"
 }
 variable vm_computername {
-  type    = list
+  type = list
 }
 variable vm_groupname {
   default = null
